@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // Lightweight guard: checks only that a session cookie exists.
 // Full JWT verification happens inside API/routes on the server.
 export function middleware(req: NextRequest) {
-  const protectedPaths = ["/dashboard", "/transfer"];
+  const protectedPaths = ["/dashboard", "/transfer", "/transactions", "/profile", "/admin"];
   const { pathname } = req.nextUrl;
 
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
@@ -20,5 +20,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/transfer/:path*"],
+  matcher: ["/dashboard/:path*", "/transfer/:path*", "/transactions/:path*", "/profile/:path*", "/admin/:path*"],
 };

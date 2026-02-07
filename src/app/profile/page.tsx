@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -22,12 +21,12 @@ export default function ProfilePage() {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to change password");
-      setOk("Password changed successfully");
+      if (!res.ok) throw new Error(json?.error || "Promena lozinke neuspešna");
+      setOk("Lozinka uspešno promenjena");
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to change password";
+      const msg = err instanceof Error ? err.message : "Promena lozinke neuspešna";
       setError(msg);
     } finally {
       setLoading(false);
@@ -35,43 +34,49 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <Link href="/dashboard" className="text-sm underline">Back to Dashboard</Link>
-      </header>
+    <div className="p-6 lg:p-8 max-w-xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold">Profil</h1>
+        <p className="text-base-content/60 mt-1">Upravljajte vašim nalogom</p>
+      </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 border rounded p-4">
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {ok && <p className="text-sm text-green-700">{ok}</p>}
+      <div className="card bg-base-100 border border-base-300 shadow-sm">
+        <div className="card-body">
+          <h2 className="font-bold text-lg mb-2">Promena lozinke</h2>
 
-        <div className="space-y-1">
-          <label className="block text-sm">Current password</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
+          {error && <div className="alert alert-error text-sm">{error}</div>}
+          {ok && <div className="alert alert-success text-sm">{ok}</div>}
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="form-control">
+              <label className="label"><span className="label-text">Trenutna lozinka</span></label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="input input-bordered w-full"
+                required
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label"><span className="label-text">Nova lozinka</span></label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="input input-bordered w-full"
+                minLength={6}
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary w-full">
+              {loading ? <span className="loading loading-spinner loading-sm"></span> : "Sačuvaj"}
+            </button>
+          </form>
         </div>
-
-        <div className="space-y-1">
-          <label className="block text-sm">New password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            minLength={6}
-            required
-          />
-        </div>
-
-        <button type="submit" disabled={loading} className="w-full bg-black text-white rounded py-2 disabled:opacity-50">
-          {loading ? "Saving..." : "Change password"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

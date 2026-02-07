@@ -10,11 +10,11 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
   if (session.role !== "ADMIN") return NextResponse.json({ error: "Nemate administratorski pristup" }, { status: 403 });
 
-  const users = await prisma.user.findMany({
-    select: { id: true, email: true, role: true, createdAt: true },
+  const accounts = await prisma.account.findMany({
+    include: { user: { select: { email: true } } },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
 
-  return NextResponse.json({ users });
+  return NextResponse.json({ accounts });
 }

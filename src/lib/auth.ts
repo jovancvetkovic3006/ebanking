@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 type Role = "USER" | "ADMIN";
-export type SessionPayload = { userId: string; role: Role };
+export type SessionPayload = { userId: string; role: Role; email: string };
 
 export function signSession(payload: SessionPayload) {
   const secret = process.env.JWT_SECRET;

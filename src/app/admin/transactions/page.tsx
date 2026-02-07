@@ -1,68 +1,99 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifySession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import TableFilter from "@/components/TableFilter";
+import type { Prisma } from "@prisma/client";
 
-type Tx = {
-  id: string;
-  amount: number;
-  createdAt: string;
-  fromAccountId: string | null;
-  toAccountId: string | null;
-};
+export default async function AdminTransactionsPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string; sort?: string }> }) {
+  const jar = await cookies();
+  const token = jar.get("session")?.value;
+  const session = verifySession(token);
+  if (!session || session.role !== "ADMIN") redirect("/login");
 
-async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, { ...init, cache: "no-store" });
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return (await res.json()) as T;
-}
-
-export default async function AdminTransactionsPage({ searchParams }: { searchParams: { page?: string } }) {
-  const page = Math.max(parseInt(searchParams.page || "1", 10) || 1, 1);
+  const params = await searchParams;
+  const page = Math.max(parseInt(params.page || "1", 10) || 1, 1);
   const take = 20;
-  const qs = new URLSearchParams({ page: String(page), take: String(take) }).toString();
-  const { transactions, totalPages }: { transactions: Tx[]; totalPages: number } = await fetchJSON(
-    `/api/admin/transactions?${qs}`
-  );
+  const skip = (page - 1) * take;
+  const q = params.q?.trim() ?? "";
+  const typeFilter = params.type ?? "";
+  const statusFilter = params.status ?? "";
+  const sort = params.sort ?? "";
 
+  const where: Prisma.TransactionWhereInput = {
+    ...(q && { OR: [{ fromAccountId: { contains: q, mode: "insensitive" as const } }, { toAccountId: { contains: q, mode: "insensitive" as const } }] }),
+    ...(typeFilter && { type: typeFilter as "DEPOSIT" | "WITHDRAW" | "TRANSFER" }),
+    ...(statusFilter && { status: statusFilter as "SUCCESS" | "FAILED" }),
+  };
+
+  const orderBy: Prisma.TransactionOrderByWithRelationInput =
+    sort === "amount_asc" ? { amount: "asc" } :
+    sort === "amount_desc" ? { amount: "desc" } :
+    sort === "oldest" ? { createdAt: "asc" } :
+    { createdAt: "desc" };
+
+  const [transactions, total] = await Promise.all([
+    prisma.transaction.findMany({ where, orderBy, skip, take }),
+    prisma.transaction.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / take));
   const prev = page > 1 ? page - 1 : 1;
   const next = page < totalPages ? page + 1 : totalPages;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Admin · Transactions</h1>
-        <Link href="/admin" className="text-sm underline">Back to Admin</Link>
-      </header>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold">Sve transakcije</h1>
+        <p className="text-base-content/60 mt-1">Pregled svih transakcija u sistemu</p>
+      </div>
 
-      <div className="overflow-x-auto border rounded">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left">
+      <TableFilter
+        searchPlaceholder="Pretraži po broju računa..."
+        filters={[
+          { key: "type", label: "Svi tipovi", options: [{ label: "Uplata", value: "DEPOSIT" }, { label: "Isplata", value: "WITHDRAW" }, { label: "Transfer", value: "TRANSFER" }] },
+          { key: "status", label: "Svi statusi", options: [{ label: "Uspešno", value: "SUCCESS" }, { label: "Neuspešno", value: "FAILED" }] },
+        ]}
+        sorts={[
+          { label: "Najnovije", value: "newest" },
+          { label: "Najstarije", value: "oldest" },
+          { label: "Iznos ↑", value: "amount_asc" },
+          { label: "Iznos ↓", value: "amount_desc" },
+        ]}
+      />
+
+      <div className="overflow-x-auto bg-base-100 rounded-lg border border-base-300 shadow-sm">
+        <table className="table table-zebra">
+          <thead className="bg-primary text-primary-content">
             <tr>
-              <th className="p-2">Date</th>
-              <th className="p-2">Amount</th>
-              <th className="p-2">From</th>
-              <th className="p-2">To</th>
+              <th>Datum</th>
+              <th>Tip</th>
+              <th>Status</th>
+              <th>Iznos</th>
+              <th>Od</th>
+              <th>Ka</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((t) => (
-              <tr key={t.id} className="border-t">
-                <td className="p-2">{new Date(t.createdAt).toLocaleString()}</td>
-                <td className="p-2">{(t.amount / 100).toFixed(2)}</td>
-                <td className="p-2 break-all">{t.fromAccountId ?? "-"}</td>
-                <td className="p-2 break-all">{t.toAccountId ?? "-"}</td>
+              <tr key={t.id} className="hover">
+                <td>{new Date(t.createdAt).toLocaleString()}</td>
+                <td><span className={`badge badge-sm ${t.type === "DEPOSIT" ? "badge-success" : t.type === "WITHDRAW" ? "badge-error" : "badge-info"}`}>{t.type === "DEPOSIT" ? "UPLATA" : t.type === "WITHDRAW" ? "ISPLATA" : "TRANSFER"}</span></td>
+                <td><span className={`badge badge-sm ${t.status === "SUCCESS" ? "badge-success" : "badge-error"}`}>{t.status === "SUCCESS" ? "USPEŠNO" : "NEUSPEŠNO"}</span></td>
+                <td className="font-mono">{(t.amount / 100).toFixed(2)}</td>
+                <td className="break-all text-xs">{t.fromAccountId ?? "-"}</td>
+                <td className="break-all text-xs">{t.toAccountId ?? "-"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <Link className="underline disabled:opacity-50" aria-disabled={page === 1} href={`/admin/transactions?page=${prev}`}>
-          Previous
-        </Link>
-        <div className="text-sm">Page {page} of {totalPages}</div>
-        <Link className="underline disabled:opacity-50" aria-disabled={page === totalPages} href={`/admin/transactions?page=${next}`}>
-          Next
-        </Link>
+      <div className="join flex justify-center">
+        <Link className={`join-item btn btn-sm ${page === 1 ? "btn-disabled" : ""}`} href={`/admin/transactions?page=${prev}`}>«</Link>
+        <span className="join-item btn btn-sm btn-active no-animation">Strana {page} / {totalPages}</span>
+        <Link className={`join-item btn btn-sm ${page === totalPages ? "btn-disabled" : ""}`} href={`/admin/transactions?page=${next}`}>»</Link>
       </div>
     </div>
   );

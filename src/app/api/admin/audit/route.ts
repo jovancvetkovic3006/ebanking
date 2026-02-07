@@ -12,8 +12,8 @@ export async function GET(req: Request) {
   const jar = await cookies();
   const token = jar.get("session")?.value;
   const session = verifySession(token);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
+  if (session.role !== "ADMIN") return NextResponse.json({ error: "Nemate administratorski pristup" }, { status: 403 });
 
   const [logs, total] = await Promise.all([
     prisma.auditLog.findMany({

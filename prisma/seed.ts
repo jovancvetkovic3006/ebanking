@@ -21,8 +21,8 @@ async function main() {
 
   await prisma.account.createMany({
     data: [
-      { userId: user.id, currency: "RSD", balance: 250000 },
-      { userId: admin.id, currency: "RSD", balance: 1000000 },
+      { id: "265-1000000000001-88", userId: user.id, currency: "RSD", balance: 250000 },
+      { id: "265-1000000000002-85", userId: admin.id, currency: "RSD", balance: 1000000 },
     ],
     skipDuplicates: true,
   });

@@ -7,7 +7,7 @@ export async function GET() {
   const jar = await cookies();
   const token = jar.get("session")?.value;
   const session = verifySession(token);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
 
   const accounts = await prisma.account.findMany({
     where: { userId: session.userId },

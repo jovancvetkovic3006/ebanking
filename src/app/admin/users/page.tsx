@@ -1,40 +1,91 @@
-import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifySession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import TableFilter from "@/components/TableFilter";
+import type { Prisma } from "@prisma/client";
 
-type UserRow = { id: string; email: string; role: "USER" | "ADMIN"; createdAt: string };
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string; role?: string; sort?: string }> }) {
+  const jar = await cookies();
+  const token = jar.get("session")?.value;
+  const session = verifySession(token);
+  if (!session || session.role !== "ADMIN") redirect("/login");
 
-async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, { ...init, cache: "no-store" });
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return (await res.json()) as T;
-}
+  const params = await searchParams;
+  const q = params.q?.trim() ?? "";
+  const roleFilter = params.role ?? "";
+  const sort = params.sort ?? "";
 
-export default async function AdminUsersPage() {
-  const { users }: { users: UserRow[] } = await fetchJSON("/api/admin/users");
+  const where: Prisma.UserWhereInput = {
+    ...(q && { OR: [{ email: { contains: q, mode: "insensitive" } }, { firstName: { contains: q, mode: "insensitive" } }, { lastName: { contains: q, mode: "insensitive" } }] }),
+    ...(roleFilter && { role: roleFilter as "USER" | "ADMIN" }),
+  };
+
+  const orderBy: Prisma.UserOrderByWithRelationInput =
+    sort === "email" ? { email: "asc" } :
+    sort === "role" ? { role: "asc" } :
+    sort === "newest" ? { createdAt: "desc" } :
+    { createdAt: "asc" };
+
+  const users = await prisma.user.findMany({
+    select: {
+      id: true, email: true, role: true, createdAt: true,
+      firstName: true, lastName: true, phone: true, address: true,
+      _count: { select: { accounts: true } },
+    },
+    where,
+    orderBy,
+  });
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Admin · Users</h1>
-        <Link href="/admin" className="text-sm underline">Back to Admin</Link>
-      </header>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold">Korisnici</h1>
+          <p className="text-base-content/60 mt-1">Pregled svih registrovanih korisnika</p>
+        </div>
+        <span className="badge badge-primary">{users.length} ukupno</span>
+      </div>
 
-      <div className="overflow-x-auto border rounded">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left">
+      <TableFilter
+        searchPlaceholder="Pretraži po imenu ili email-u..."
+        filters={[
+          { key: "role", label: "Sve uloge", options: [{ label: "Admin", value: "ADMIN" }, { label: "Korisnik", value: "USER" }] },
+        ]}
+        sorts={[
+          { label: "Najnoviji", value: "newest" },
+          { label: "Email (A-Z)", value: "email" },
+          { label: "Uloga", value: "role" },
+        ]}
+      />
+
+      <div className="overflow-x-auto bg-base-100 rounded-lg border border-base-300 shadow-sm">
+        <table className="table table-zebra">
+          <thead className="bg-primary text-primary-content">
             <tr>
-              <th className="p-2">Email</th>
-              <th className="p-2">Role</th>
-              <th className="p-2">Created</th>
-              <th className="p-2">ID</th>
+              <th>Ime i prezime</th>
+              <th>Email</th>
+              <th>Telefon</th>
+              <th>Adresa</th>
+              <th>Uloga</th>
+              <th>Računi</th>
+              <th>Registrovan</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-t">
-                <td className="p-2">{u.email}</td>
-                <td className="p-2">{u.role}</td>
-                <td className="p-2">{new Date(u.createdAt).toLocaleString()}</td>
-                <td className="p-2 break-all text-xs">{u.id}</td>
+              <tr key={u.id} className="hover">
+                <td className="font-semibold">
+                  {u.firstName || u.lastName
+                    ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim()
+                    : <span className="opacity-40">—</span>}
+                </td>
+                <td>{u.email}</td>
+                <td className="text-sm">{u.phone ?? <span className="opacity-40">—</span>}</td>
+                <td className="text-sm max-w-xs truncate">{u.address ?? <span className="opacity-40">—</span>}</td>
+                <td><span className={`badge ${u.role === "ADMIN" ? "badge-accent" : "badge-ghost"} badge-sm`}>{u.role === "ADMIN" ? "ADMIN" : "KORISNIK"}</span></td>
+                <td className="text-center">{u._count.accounts}</td>
+                <td className="text-sm">{new Date(u.createdAt).toLocaleDateString("sr-RS")}</td>
               </tr>
             ))}
           </tbody>

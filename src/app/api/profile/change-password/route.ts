@@ -14,17 +14,17 @@ export async function POST(req: Request) {
   const jar = await cookies();
   const token = jar.get("session")?.value;
   const session = verifySession(token);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
 
   const parsed = Body.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Neispravni podaci" }, { status: 400 });
 
   const { currentPassword, newPassword } = parsed.data;
   const user = await prisma.user.findUnique({ where: { id: session.userId } });
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (!user) return NextResponse.json({ error: "Korisnik nije prona\u0111en" }, { status: 404 });
 
   const ok = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!ok) return NextResponse.json({ error: "Current password incorrect" }, { status: 400 });
+  if (!ok) return NextResponse.json({ error: "Trenutna lozinka nije ispravna" }, { status: 400 });
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
