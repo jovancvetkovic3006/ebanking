@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TransactionType {
+  TRANSFER
+  DEPOSIT
+  WITHDRAW
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  accounts     Account[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  currency  String   @default("RSD")
+  // Balance in the smallest unit (e.g., para/cents)
+  balance   Int      @default(0)
+  outgoing  Transaction[] @relation("Outgoing")
+  incoming  Transaction[] @relation("Incoming")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  type          TransactionType
+  status        TransactionStatus @default(SUCCESS)
+  amount        Int
+  fromAccountId String?
+  toAccountId   String?
+  fromAccount   Account? @relation("Outgoing", fields: [fromAccountId], references: [id])
+  toAccount     Account? @relation("Incoming", fields: [toAccountId], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([fromAccountId])
+  @@index([toAccountId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entityType String?
+  entityId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
