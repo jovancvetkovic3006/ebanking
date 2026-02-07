@@ -1,0 +1,28 @@
+import { NextResponse, type NextRequest } from "next/server";
+
+export function middleware(req: NextRequest) {
+  const protectedPaths = ["/dashboard", "/transfer", "/transactions", "/profile", "/admin"];
+  const { pathname } = req.nextUrl;
+
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+  if (!isProtected) return NextResponse.next();
+
+  const hasSession = req.cookies.get("session");
+  if (!hasSession) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/transfer/:path*",
+    "/transactions/:path*",
+    "/profile/:path*",
+    "/admin/:path*",
+  ],
+};
