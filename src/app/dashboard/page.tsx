@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import DepositWithdrawForm from "./DepositWithdrawForm";
 
 export default async function DashboardPage() {
@@ -37,6 +38,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-6xl mx-auto">
+      <Breadcrumbs items={[{ label: "Početna" }]} />
+
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">{greeting}!</h1>

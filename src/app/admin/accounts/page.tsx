@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import TableFilter from "@/components/TableFilter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default async function AdminAccountsPage({ searchParams }: { searchParams: Promise<{ q?: string; sort?: string }> }) {
   const jar = await cookies();
@@ -42,6 +43,8 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Računi" }]} />
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Svi računi</h1>

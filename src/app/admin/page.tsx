@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default async function AdminIndexPage() {
   const jar = await cookies();
@@ -12,6 +13,8 @@ export default async function AdminIndexPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Admin" }]} />
+
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Administracija</h1>
         <p className="text-base-content/60 mt-1">Upravljanje sistemom elektronskog bankarstva</p>

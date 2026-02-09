@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import TableFilter from "@/components/TableFilter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import type { Prisma } from "@prisma/client";
 
 export default async function AdminTransactionsPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string; sort?: string }> }) {
@@ -44,6 +45,8 @@ export default async function AdminTransactionsPage({ searchParams }: { searchPa
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Transakcije" }]} />
+
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Sve transakcije</h1>
         <p className="text-base-content/60 mt-1">Pregled svih transakcija u sistemu</p>

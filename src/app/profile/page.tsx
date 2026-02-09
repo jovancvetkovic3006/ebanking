@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 interface UserProfile {
   id: string;
@@ -101,6 +102,8 @@ export default function ProfilePage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Početna", href: "/dashboard" }, { label: "Profil" }]} />
+
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Profil</h1>
         <p className="text-base-content/60 mt-1">Upravljajte vašim nalogom</p>

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const jar = await cookies();
@@ -40,13 +41,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
-      <div className="text-sm breadcrumbs">
-        <ul>
-          <li><Link href="/dashboard">Početna</Link></li>
-          <li>Račun</li>
-          <li className="font-mono">{id}</li>
-        </ul>
-      </div>
+      <Breadcrumbs items={[{ label: "Početna", href: "/dashboard" }, { label: "Račun", href: "/dashboard" }, { label: id }]} />
 
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Detalji računa</h1>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import TableFilter from "@/components/TableFilter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import type { Prisma } from "@prisma/client";
 
 export default async function AdminAuditPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; action?: string; sort?: string }> }) {
@@ -45,6 +46,8 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin" }, { label: "Evidencija" }]} />
+
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Evidencija aktivnosti</h1>
         <p className="text-base-content/60 mt-1">Kompletna revizijska evidencija sistema</p>

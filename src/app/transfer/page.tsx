@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 type Account = { id: string; balance: number; currency: string };
 
@@ -57,6 +58,8 @@ export default function TransferPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-xl mx-auto space-y-6">
+      <Breadcrumbs items={[{ label: "Početna", href: "/dashboard" }, { label: "Novi transfer" }]} />
+
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold">Novi transfer</h1>
         <p className="text-base-content/60 mt-1">Prenesite sredstva na drugi račun</p>
