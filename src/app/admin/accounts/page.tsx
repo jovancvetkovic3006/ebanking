@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
@@ -73,6 +74,7 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
               <th>Odlazne</th>
               <th>Dolazne</th>
               <th>Kreiran</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -84,12 +86,13 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
                     : <span className="opacity-40">—</span>}
                 </td>
                 <td className="text-sm">{a.user.email}</td>
-                <td className="font-mono text-xs break-all">{a.id}</td>
+                <td className="font-mono text-xs break-all"><Link href={`/admin/accounts/${a.id}`} className="link link-hover link-primary">{a.id}</Link></td>
                 <td><span className="badge badge-primary badge-sm">{a.currency}</span></td>
                 <td className="font-mono font-semibold">{(a.balance / 100).toFixed(2)}</td>
                 <td className="text-center">{a._count.outgoing}</td>
                 <td className="text-center">{a._count.incoming}</td>
                 <td className="text-sm">{new Date(a.createdAt).toLocaleDateString("sr-RS")}</td>
+                <td><Link href={`/admin/accounts/${a.id}`} className="btn btn-ghost btn-xs">Detalji →</Link></td>
               </tr>
             ))}
           </tbody>

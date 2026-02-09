@@ -90,7 +90,11 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
                 <td className="text-sm">{l.user?.email ?? <span className="opacity-40">-</span>}</td>
                 <td><span className={`badge badge-sm ${l.action.includes("FAILED") ? "badge-error" : l.action === "LOGIN" || l.action === "REGISTER" ? "badge-info" : l.action === "LOGOUT" ? "badge-warning" : "badge-success"}`}>{{ LOGIN: "PRIJAVA", LOGOUT: "ODJAVA", REGISTER: "REGISTRACIJA", TRANSFER: "TRANSFER", DEPOSIT: "UPLATA", WITHDRAW: "ISPLATA", CHANGE_PASSWORD: "PROMENA LOZINKE", LOGIN_FAILED: "NEUSPEŠNA PRIJAVA", TRANSFER_FAILED: "TRANSFER NEUSPEŠAN", WITHDRAW_FAILED: "ISPLATA NEUSPEŠNA" }[l.action] ?? l.action}</span></td>
                 <td className="text-xs">{l.entityType ?? "-"} / <span className="font-mono">{l.entityId?.slice(0, 8) ?? "-"}</span></td>
-                <td className="text-xs max-w-xs truncate">{l.meta ? JSON.stringify(l.meta) : "-"}</td>
+                <td className="text-xs max-w-xs truncate">{l.meta ? JSON.stringify(
+                  typeof l.meta === "object" && l.meta !== null && "amount" in l.meta
+                    ? { ...(l.meta as Record<string, unknown>), amount: Number((l.meta as Record<string, unknown>).amount) / 100 }
+                    : l.meta
+                ) : "-"}</td>
               </tr>
             ))}
           </tbody>

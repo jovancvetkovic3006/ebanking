@@ -54,7 +54,7 @@ export default async function DashboardPage() {
         </div>
 
         {accounts.map((a) => (
-          <div key={a.id} className="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow">
+          <Link key={a.id} href={`/accounts/${a.id}`} className="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
             <div className="card-body p-5">
               <div className="flex items-center justify-between">
                 <span className="badge badge-primary badge-sm">{a.currency}</span>
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
               <p className="text-2xl font-bold mt-2">{(a.balance / 100).toLocaleString("sr-RS", { minimumFractionDigits: 2 })}</p>
               <p className="text-xs text-base-content/50">Dostupno stanje</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

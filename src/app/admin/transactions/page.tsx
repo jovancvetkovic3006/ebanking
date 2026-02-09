@@ -34,7 +34,7 @@ export default async function AdminTransactionsPage({ searchParams }: { searchPa
     { createdAt: "desc" };
 
   const [transactions, total] = await Promise.all([
-    prisma.transaction.findMany({ where, orderBy, skip, take }),
+    prisma.transaction.findMany({ where, orderBy, skip, take, include: { fromAccount: { select: { user: { select: { email: true } } } }, toAccount: { select: { user: { select: { email: true } } } } } }),
     prisma.transaction.count({ where }),
   ]);
 
@@ -68,6 +68,7 @@ export default async function AdminTransactionsPage({ searchParams }: { searchPa
           <thead className="bg-primary text-primary-content">
             <tr>
               <th>Datum</th>
+              <th>Korisnik</th>
               <th>Tip</th>
               <th>Status</th>
               <th>Iznos</th>
@@ -79,6 +80,7 @@ export default async function AdminTransactionsPage({ searchParams }: { searchPa
             {transactions.map((t) => (
               <tr key={t.id} className="hover">
                 <td>{new Date(t.createdAt).toLocaleString()}</td>
+                <td className="text-xs">{(t.type === "DEPOSIT" ? t.toAccount?.user?.email : t.fromAccount?.user?.email) ?? "-"}</td>
                 <td><span className={`badge badge-sm ${t.type === "DEPOSIT" ? "badge-success" : t.type === "WITHDRAW" ? "badge-error" : "badge-info"}`}>{t.type === "DEPOSIT" ? "UPLATA" : t.type === "WITHDRAW" ? "ISPLATA" : "TRANSFER"}</span></td>
                 <td><span className={`badge badge-sm ${t.status === "SUCCESS" ? "badge-success" : "badge-error"}`}>{t.status === "SUCCESS" ? "USPEŠNO" : "NEUSPEŠNO"}</span></td>
                 <td className="font-mono">{(t.amount / 100).toFixed(2)}</td>
